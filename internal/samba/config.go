@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -38,6 +39,48 @@ func BackupConfig() error {
 	return nil
 }
 
+// RemovePS2Share removes existing PS2 share from smb.conf
+func RemovePS2Share() error {
+	if !IsRoot() {
+		return fmt.Errorf("root privileges required")
+	}
+
+	data, err := os.ReadFile(SmbConfPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil // File doesn't exist, nothing to remove
+		}
+		return fmt.Errorf("failed to read smb.conf: %v", err)
+	}
+
+	content := string(data)
+	
+	// Find [PS2] section
+	startIdx := strings.Index(content, "[PS2]")
+	if startIdx == -1 {
+		return nil // PS2 section doesn't exist
+	}
+
+	// Find the next section or end of file
+	endIdx := len(content)
+	nextSection := strings.Index(content[startIdx+5:], "[")
+	if nextSection != -1 {
+		endIdx = startIdx + 5 + nextSection
+	}
+
+	// Remove the PS2 section
+	newContent := content[:startIdx] + content[endIdx:]
+
+	// Write back to file
+	err = os.WriteFile(SmbConfPath, []byte(newContent), 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write smb.conf: %v", err)
+	}
+
+	fmt.Println("Removed existing PS2 configuration from smb.conf")
+	return nil
+}
+
 // AddPS2Share adds PS2 share configuration to smb.conf
 func AddPS2Share(gamesPath string, useGuest bool) error {
 	if !IsRoot() {
@@ -47,6 +90,11 @@ func AddPS2Share(gamesPath string, useGuest bool) error {
 	// Create games directory if it doesn't exist
 	if err := os.MkdirAll(gamesPath, 0755); err != nil {
 		return fmt.Errorf("failed to create games directory: %v", err)
+	}
+
+	// Remove existing PS2 share if present
+	if err := RemovePS2Share(); err != nil {
+		return fmt.Errorf("failed to remove existing PS2 share: %v", err)
 	}
 
 	// Build share configuration
