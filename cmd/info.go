@@ -3,11 +3,17 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/matheusc457/ps2smb/internal/config"
 	"github.com/matheusc457/ps2smb/internal/network"
 	"github.com/matheusc457/ps2smb/internal/samba"
 	"github.com/spf13/cobra"
+)
+
+var (
+	useNetBIOS bool
 )
 
 var infoCmd = &cobra.Command{
@@ -24,6 +30,36 @@ var infoCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(infoCmd)
+	infoCmd.Flags().BoolVarP(&useNetBIOS, "netbios", "n", false, "Use NetBIOS name instead of IP address")
+}
+
+func getHostname() (string, error) {
+	// Method 1: Try /etc/hostname (works on most Linux)
+	data, err := os.ReadFile("/etc/hostname")
+	if err == nil && len(data) > 0 {
+		return strings.ToUpper(strings.TrimSpace(string(data))), nil
+	}
+	
+	// Method 2: Try hostnamectl command (systemd-based)
+	cmd := exec.Command("hostnamectl", "hostname")
+	output, err := cmd.Output()
+	if err == nil && len(output) > 0 {
+		return strings.ToUpper(strings.TrimSpace(string(output))), nil
+	}
+	
+	// Method 3: Try hostname command (traditional)
+	cmd = exec.Command("hostname")
+	output, err = cmd.Output()
+	if err == nil && len(output) > 0 {
+		return strings.ToUpper(strings.TrimSpace(string(output))), nil
+	}
+	
+	// Method 4: Fallback to os.Hostname() (Go builtin)
+	name, err := os.Hostname()
+	if err != nil {
+		return "", err
+	}
+	return strings.ToUpper(name), nil
 }
 
 func runInfo() error {
@@ -44,6 +80,9 @@ func runInfo() error {
 		return fmt.Errorf("failed to detect IP address: %v", err)
 	}
 
+	// Get hostname for NetBIOS
+	hostname, hostnameErr := getHostname()
+
 	// Check Samba status
 	sambaRunning := samba.IsSambaRunning()
 	statusSymbol := "✓"
@@ -62,6 +101,9 @@ func runInfo() error {
 	fmt.Println()
 	fmt.Printf("Server Status: %s %s\n", statusSymbol, statusText)
 	fmt.Printf("IP Address: %s\n", ip)
+	if hostname != "" {
+		fmt.Printf("NetBIOS Name: %s\n", hostname)
+	}
 	fmt.Printf("Share Name: %s\n", cfg.ShareName)
 	fmt.Printf("Games Path: %s\n", cfg.GamesPath)
 	fmt.Println()
@@ -83,26 +125,53 @@ func runInfo() error {
 	// PS2 Configuration Instructions
 	fmt.Println("Configure on your PS2 (OPL):")
 	fmt.Println("=============================")
-	fmt.Println("1. Go to Network Settings in OPL")
-	fmt.Println("2. Set these values:")
-	fmt.Printf("   - IP Address Type: Static or DHCP\n")
-	fmt.Printf("   - SMB Server: %s\n", ip)
-	fmt.Printf("   - SMB Share: %s\n", cfg.ShareName)
+	fmt.Println()
+	fmt.Println("1. Go to 'Network Config' in OPL main menu")
+	fmt.Println()
+	fmt.Println("2. PS2 Network Settings:")
+	fmt.Println("   - IP address type: DHCP (or Static if you prefer)")
+	fmt.Println("   If using Static:")
+	fmt.Println("     - IP address: 192.168.1.10 (example, choose an available IP)")
+	fmt.Println("     - Mask: 255.255.255.0")
+	fmt.Printf("     - Gateway: %s (usually your router)\n", ip)
+	fmt.Println()
 	
-	if cfg.UseGuest {
-		fmt.Println("   - SMB User: (leave empty)")
-		fmt.Println("   - SMB Password: (leave empty)")
+	fmt.Println("3. SMB Server Settings:")
+	
+	if useNetBIOS && hostname != "" && hostnameErr == nil {
+		fmt.Println("   - Address type: NetBIOS")
+		fmt.Printf("   - Address: %s (hostname in UPPERCASE)\n", hostname)
 	} else {
-		fmt.Printf("   - SMB User: %s\n", cfg.SambaUser)
-		fmt.Println("   - SMB Password: (password you set)")
+		if useNetBIOS && (hostname == "" || hostnameErr != nil) {
+			fmt.Println("   WARNING: Could not get hostname, using IP instead")
+		}
+		fmt.Println("   - Address type: IP")
+		fmt.Printf("   - Address: %s\n", ip)
 	}
 	
-	fmt.Println("3. Save and reconnect")
+	fmt.Printf("   - Share: %s\n", cfg.ShareName)
+	fmt.Println("   - Port: 445 (default, don't change)")
+	
+	if cfg.UseGuest {
+		fmt.Println("   - User: (leave empty)")
+		fmt.Println("   - Password: (leave empty)")
+	} else {
+		fmt.Printf("   - User: %s\n", cfg.SambaUser)
+		fmt.Println("   - Password: (password you set during init)")
+	}
+	fmt.Println()
+	
+	fmt.Println("4. Advanced Settings (if needed):")
+	fmt.Println("   - For direct crossover cable connection:")
+	fmt.Println("     - Ethernet operation mode: 100Mbit half-duplex")
+	fmt.Println()
+	
+	fmt.Println("5. Save settings and select 'Reconnect'")
 	fmt.Println()
 
-	fmt.Println("Place your games in:")
-	fmt.Printf("  DVD: %s/DVD/\n", cfg.GamesPath)
-	fmt.Printf("  CD: %s/CD/\n", cfg.GamesPath)
+	fmt.Println("Place your game ISOs in:")
+	fmt.Printf("  DVD games: %s/DVD/\n", cfg.GamesPath)
+	fmt.Printf("  CD games:  %s/CD/\n", cfg.GamesPath)
 	fmt.Println()
 
 	if !sambaRunning {
@@ -119,6 +188,15 @@ func runInfo() error {
 			fmt.Printf("  - %s\n", ip)
 		}
 		fmt.Println()
+		fmt.Println("Tip: Use the interface connected to your PS2")
+		fmt.Println()
+	}
+
+	// Show usage tip
+	if !useNetBIOS {
+		fmt.Println("Tip: You can use NetBIOS instead of IP with: ps2smb info --netbios")
+	} else {
+		fmt.Println("Tip: You can use IP address instead with: ps2smb info")
 	}
 
 	return nil
