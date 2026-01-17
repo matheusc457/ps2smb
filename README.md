@@ -8,60 +8,99 @@ ps2smb automates the setup of a Samba server optimized for PlayStation 2 network
 
 ## Features
 
-- Automatic Samba installation and configuration
-- Optimized SMB v1 settings for PS2 compatibility
-- Network detection and connection info
-- Game library management
-- Status checks and troubleshooting
+- Automatic Samba detection and configuration
+- Multi-distro support (Debian/Ubuntu, Arch, Fedora)
+- SMB v1 protocol for PS2 compatibility
+- Guest or password authentication options
+- Automatic backup of existing Samba configuration
 
-## Quick Start
+## Installation
+
+### From Source
 
 ```bash
-# Install
-git clone https://github.com/matheusc457/ps2smb && cd ps2smb/
+# Clone the repository
+git clone https://github.com/matheusc457/ps2smb
+cd ps2smb
 
-# Compile
-go build -o ps2smb ./cmd/ps2smb/
+# Build
+go build -o ps2smb ./cmd/ps2smb
 
-# Execute
-./ps2smb
-
+# Optional: Install to system
+sudo cp ps2smb /usr/local/bin/
 ```
+
+### Using Go Install
+
+```bash
+go install github.com/matheusc457/ps2smb/cmd/ps2smb@latest
+```
+
+## Usage
+
+### Initial Setup
+
+Configure Samba server for PS2 (requires sudo):
+
+```bash
+sudo ps2smb init
+```
+
+This will:
+- Detect your Linux distribution
+- Check if Samba is installed
+- Configure SMB share optimized for PS2
+- Create games directory
+- Set up authentication (guest or password)
+- Start and enable Samba service
+
+### View Connection Info
+
+```bash
+ps2smb info
+```
+
+Shows the IP address and settings needed to configure OPL on your PS2.
 
 ## Requirements
 
-- Linux (tested on Ubuntu, Debian, Arch, Fedora)
-- Samba (will be installed automatically if not present)
-- Root/sudo access for initial setup
-
-## Commands
-
-```bash
-ps2smb init       # Configure Samba server for PS2
-ps2smb info       # Show connection information
-ps2smb list       # List available games
-ps2smb add        # Add game to library
-ps2smb status     # Check server status
-```
+- Linux (tested on Arch, Ubuntu, Debian, Fedora)
+- Go 1.21 or higher (for building from source)
+- Samba (can be installed during setup)
+- Root/sudo access for initial configuration
 
 ## Roadmap
 
-- [x] Project setup
-- [ ] Basic CLI structure
-- [ ] Samba detection and configuration
-- [ ] Network detection
-- [ ] Game management
-- [ ] Status checks
-- [ ] Multi-distro support
+### v0.1.0 (Current)
+- [x] Project structure
+- [x] CLI framework with Cobra
+- [x] Init command with Samba configuration
+- [x] Multi-distro support
+- [x] User configuration management
+
+### v0.2.0 (Planned)
+- [ ] Info command (network detection)
+- [ ] Status command (health checks)
+- [ ] List command (scan games directory)
+- [ ] Add command (game management)
+
+### v1.0.0 (Future)
+- [ ] Automatic game renaming
+- [ ] Firewall configuration assistance
+- [ ] Connection testing
+- [ ] Enhanced error handling
 
 ## Contributing
 
-Contributions are welcome! Feel free to open issues or submit PRs.
+Contributions are welcome! Feel free to:
+- Report bugs by opening an issue
+- Suggest new features
+- Submit pull requests
 
 ## License
 
-GNU General Public License v3.0 - see LICENSE for details.
+GNU General Public License v3.0 - see [LICENSE](LICENSE) for details.
 
 ## Disclaimer
 
-This tool is for use with legally obtained PS2 game backups only.
+This tool is intended for use with legally obtained PS2 game backups only. Users are responsible for ensuring they have the right to use any game files.
