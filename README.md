@@ -18,13 +18,14 @@ ps2smb automates the setup of a Samba server optimized for PlayStation 2 network
 
 ```bash
 # Install
-go install github.com/matheusc457/ps2smb@latest
+git clone https://github.com/matheusc457/ps2smb && cd ps2smb/
 
-# Setup everything
-ps2smb init
+# Compile
+go build -o ps2smb ./cmd/ps2smb/
 
-# Get connection info for your PS2
-ps2smb info
+# Execute
+./ps2smb
+
 ```
 
 ## Requirements
