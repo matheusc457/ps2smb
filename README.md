@@ -18,7 +18,7 @@ ps2smb automates the setup of a Samba server optimized for PlayStation 2 network
 
 ```bash
 # Install
-go install github.com/seu-usuario/ps2smb@latest
+go install github.com/matheusc457/ps2smb@latest
 
 # Setup everything
 ps2smb init
