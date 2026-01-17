@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -87,10 +88,24 @@ func AddPS2Share(gamesPath string, useGuest bool) error {
 		return fmt.Errorf("root privileges required")
 	}
 
-	// Create games directory if it doesn't exist
+	// Create games directory structure if it doesn't exist
 	if err := os.MkdirAll(gamesPath, 0755); err != nil {
 		return fmt.Errorf("failed to create games directory: %v", err)
 	}
+
+	// Create DVD and CD subdirectories for OPL
+	dvdPath := filepath.Join(gamesPath, "DVD")
+	cdPath := filepath.Join(gamesPath, "CD")
+
+	if err := os.MkdirAll(dvdPath, 0755); err != nil {
+		return fmt.Errorf("failed to create DVD directory: %v", err)
+	}
+
+	if err := os.MkdirAll(cdPath, 0755); err != nil {
+		return fmt.Errorf("failed to create CD directory: %v", err)
+	}
+
+	fmt.Println("Created DVD and CD directories for OPL")
 
 	// Remove existing PS2 share if present
 	if err := RemovePS2Share(); err != nil {
