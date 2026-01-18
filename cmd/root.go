@@ -1,7 +1,3 @@
-/*
-Copyright © 2026 NAME HERE <EMAIL ADDRESS>
-
-*/
 package cmd
 
 import (
@@ -10,25 +6,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
-
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "ps2smb",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Configure SMB shares for PlayStation 2 network gaming",
+	Long: `ps2smb is a command-line tool that automates the setup and management
+of Samba servers optimized for PlayStation 2 network gaming via OPL.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+It handles server configuration, network detection, and provides
+step-by-step instructions for connecting your PS2.`,
+	Example: `  # Initialize Samba server for PS2
+  sudo ps2smb init
+
+  # Show connection information
+  sudo ps2smb info
+
+  # Show connection info using specific network interface
+  sudo ps2smb info --interface enp3s0
+
+  # List available network interfaces
+  ps2smb interfaces`,
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -37,15 +35,6 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ps2smb.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Remove default flags that aren't needed
+	rootCmd.CompletionOptions.DisableDefaultCmd = false
 }
-
-
