@@ -29,7 +29,8 @@ func init() {
 
 func runInit() error {
 	fmt.Println("PS2SMB Initialization")
-	fmt.Println("=====================\n")
+	fmt.Println("=====================")
+	fmt.Println()
 
 	// Check if already configured
 	if config.Exists() {
@@ -51,7 +52,8 @@ func runInit() error {
 	if err != nil {
 		return fmt.Errorf("failed to detect distribution: %v", err)
 	}
-	fmt.Printf("Detected: %s\n\n", distro.Name)
+	fmt.Printf("Detected: %s\n", distro.Name)
+	fmt.Println()
 
 	// Check if Samba is installed
 	if !samba.IsSambaInstalled() {
@@ -65,7 +67,8 @@ func runInit() error {
 		}
 		return fmt.Errorf("samba is required but not installed")
 	}
-	fmt.Println("Samba is installed.\n")
+	fmt.Println("Samba is installed.")
+	fmt.Println()
 
 	// Ask for games path
 	reader := bufio.NewReader(os.Stdin)
