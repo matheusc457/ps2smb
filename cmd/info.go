@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	useNetBIOS bool
+	useNetBIOS       bool
+	interfaceName    string
 )
 
 var infoCmd = &cobra.Command{
@@ -31,6 +32,7 @@ var infoCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(infoCmd)
 	infoCmd.Flags().BoolVarP(&useNetBIOS, "netbios", "n", false, "Use NetBIOS name instead of IP address")
+	infoCmd.Flags().StringVarP(&interfaceName, "interface", "i", "", "Specify network interface (e.g., eth0, enp3s0)")
 }
 
 func getHostname() (string, error) {
@@ -75,9 +77,22 @@ func runInfo() error {
 	}
 
 	// Get local IP
-	ip, err := network.GetLocalIP()
-	if err != nil {
-		return fmt.Errorf("failed to detect IP address: %v", err)
+	var ip string
+	
+	if interfaceName != "" {
+		// Use specified interface
+		var ipErr error
+		ip, ipErr = network.GetIPFromInterface(interfaceName)
+		if ipErr != nil {
+			return fmt.Errorf("failed to get IP from interface %s: %v", interfaceName, ipErr)
+		}
+	} else {
+		// Auto-detect IP
+		var ipErr error
+		ip, ipErr = network.GetLocalIP()
+		if ipErr != nil {
+			return fmt.Errorf("failed to detect IP address: %v", ipErr)
+		}
 	}
 
 	// Get hostname for NetBIOS
@@ -184,8 +199,8 @@ func runInfo() error {
 	}
 
 	// Show all IPs if multiple interfaces
-	allIPs, err := network.GetAllLocalIPs()
-	if err == nil && len(allIPs) > 1 {
+	allIPs, ipsErr := network.GetAllLocalIPs()
+	if ipsErr == nil && len(allIPs) > 1 {
 		fmt.Println("Available network interfaces:")
 		for _, ip := range allIPs {
 			fmt.Printf("  - %s\n", ip)
