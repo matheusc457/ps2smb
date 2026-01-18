@@ -16,6 +16,7 @@ ps2smb automates the setup of a Samba server optimized for PlayStation 2 network
 - Network interface selection for multi-adapter systems
 - NetBIOS and IP address modes
 - OPL-compliant directory structure creation
+- System health checks and diagnostics
 
 ## Installation
 
@@ -44,6 +45,10 @@ sudo cp ps2smb /usr/local/bin/
 ```bash
 go install github.com/matheusc457/ps2smb/cmd/ps2smb@latest
 ```
+
+### From GitHub Releases
+
+Download pre-compiled binaries from the [releases page](https://github.com/matheusc457/ps2smb/releases).
 
 ## Usage
 
@@ -81,6 +86,20 @@ sudo ps2smb info --netbios
 sudo ps2smb info --interface enp3s0
 ```
 
+### Check System Status
+
+Verify that everything is configured correctly:
+
+```bash
+sudo ps2smb status
+```
+
+This command checks:
+- Samba installation and service status
+- Games directory structure
+- Port 445 accessibility
+- Configuration validity
+
 ### List Network Interfaces
 
 View all available network interfaces:
@@ -116,6 +135,11 @@ Connect your PC directly to the PS2 using an Ethernet crossover cable. The PS2 a
 Connect both the PC and PS2 to the same network via a router or switch. This is the recommended setup as it allows DHCP configuration.
 
 ## Troubleshooting
+
+### Check System Status
+```bash
+sudo ps2smb status
+```
 
 ### Samba Service Not Running
 ```bash

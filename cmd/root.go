@@ -20,6 +20,9 @@ step-by-step instructions for connecting your PS2.`,
   # Show connection information
   sudo ps2smb info
 
+  # Check system status
+  sudo ps2smb status
+
   # Show connection info using specific network interface
   sudo ps2smb info --interface enp3s0
 
