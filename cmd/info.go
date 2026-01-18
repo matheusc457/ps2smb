@@ -67,7 +67,7 @@ func getHostname() (string, error) {
 func runInfo() error {
 	// Check if ps2smb is configured
 	if !config.Exists() {
-		return fmt.Errorf("ps2smb is not configured. Please run 'sudo ps2smb init' first")
+		return fmt.Errorf("ps2smb is not configured yet.\nPlease run 'sudo ps2smb init' first to set up the server.\n\nNote: This command (info) should also be run with sudo to check server status")
 	}
 
 	// Load configuration
@@ -98,13 +98,31 @@ func runInfo() error {
 	// Get hostname for NetBIOS
 	hostname, hostnameErr := getHostname()
 
-	// Check Samba status
-	sambaRunning := samba.IsSambaRunning()
-	statusSymbol := "✓"
-	statusText := "Running"
-	if !sambaRunning {
-		statusSymbol = "✗"
-		statusText = "Not Running"
+	// Check Samba status (may require sudo)
+	sambaRunning := false
+	canCheckStatus := true
+	
+	// Try to check status, but don't fail if we don't have permission
+	if samba.IsRoot() {
+		sambaRunning = samba.IsSambaRunning()
+	} else {
+		// Try anyway, might work without root on some systems
+		sambaRunning = samba.IsSambaRunning()
+		// If we're not root and can't check, just note it
+		canCheckStatus = false
+	}
+	
+	statusSymbol := "?"
+	statusText := "Unknown (run with sudo to check)"
+	
+	if canCheckStatus || samba.IsRoot() {
+		if sambaRunning {
+			statusSymbol = "✓"
+			statusText = "Running"
+		} else {
+			statusSymbol = "✗"
+			statusText = "Not Running"
+		}
 	}
 
 	// Format SMB path
